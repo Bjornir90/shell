@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
 #define STRSIZE 1024
 
 int getNextArgument(int index, char * input, char * argument, char separator){
@@ -73,7 +74,7 @@ int main(int argc, char * argv[]){
     }
     args[0] = path;
 
-    //Intern functions
+    //Internal functions
     if(strcmp(exitCommand, path) == 0){//if the user request to quit
       shouldQuit = 1;
       free(buffer);
@@ -93,7 +94,9 @@ int main(int argc, char * argv[]){
         continue;
       }
       if(*newDirectory == '/'){//Absolute path
-        strcpy(currentPath, newDirectory);
+        DIR* dir = opendir(newDirectory);
+        if (dir)  strcpy(currentPath, newDirectory); //Directory exists
+        else if (errno == ENOENT) fprintf(stderr, "%s : directory does not exists\n", newDirectory);
       } else if(*newDirectory == '.' && newDirectory[1] == '.'){//Go up one node in the file tree
 
         //Find last '/' in path
@@ -112,8 +115,16 @@ int main(int argc, char * argv[]){
       } else if(*newDirectory == '~'){//Go back to home directory
         strcpy(currentPath, "/home");
       } else {
+        char *temp = malloc(sizeof(char)*STRSIZE*4);
+        strcpy(temp, currentPath);//Backup the current path in case the directory does not exists
         strcat(currentPath, "/");
         strcat(currentPath, newDirectory);
+        DIR* dir = opendir(currentPath);
+        if (errno == ENOENT){//If directory does not exists, reverts to previous position
+          fprintf(stderr, "%s : directory does not exists\n", currentPath);
+          strcpy(currentPath, temp);
+        }
+        free(temp);
       }
       continue;
     }
