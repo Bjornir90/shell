@@ -1,10 +1,12 @@
 #include <dirent.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "parser.h"
 #define STRSIZE 1024
 
@@ -57,6 +59,31 @@ int handleInternals(char *path, char *buffer, int index){
         fprintf(stderr, "%s : error accessing directory\n", currentPath);
       }
     }
+    return 1;
+  } else if (strcmp(path, "cat") == 0){
+    char pathToFile[STRSIZE*4];
+    getNextArgument(++index, buffer, pathToFile, ' ');
+
+    if(strcmp(pathToFile, "") == 0){
+      fprintf(stderr, "cat : empty filename\n");
+      return 1;
+    }
+
+    int file = open(pathToFile, O_RDONLY);
+    if (file == -1){
+      fprintf(stderr, "Could not open file\n %s\n", strerror(errno));
+      return 1;
+    }
+
+    char buffer[STRSIZE];
+    int numberOfBytesRead;
+    do {
+      numberOfBytesRead = read(file, buffer, STRSIZE-1);
+      buffer[numberOfBytesRead] = '\0';
+      printf("%s", buffer);
+    } while (numberOfBytesRead == STRSIZE-1);
+
+    close(file);
     return 1;
   }
   return -1;
