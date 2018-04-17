@@ -32,8 +32,9 @@ char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 }
 
 int main(int argc, char * argv[]){
-  char *currentPath = calloc(STRSIZE*4, sizeof(char));
-  strcat(currentPath, "/home");
+  //char *currentPath = calloc(STRSIZE*4, sizeof(char));
+  char currentPath[STRSIZE*4];
+  getcwd(currentPath, sizeof(currentPath));
   int redirectCode;
   int shouldQuit = 0;
   printf("You can type \"help\" to receive help\n");
@@ -59,14 +60,16 @@ int main(int argc, char * argv[]){
 
     //Internal commands
     int internalResult = handleInternals(path, buffer, index, currentPath);
-    if(internalResult){//A command has been found and we should quit this iteration
+    if(internalResult == 1){//A command has been found and we should quit this iteration
+      getcwd(currentPath, sizeof(currentPath));
+      printf("Path : %s\n", currentPath);
       continue;
     } else if(internalResult == 0){
       shouldQuit = 1;
       free(buffer);
       free(args);
       free(path);
-      free(currentPath);
+      //free(currentPath);
       printf("It was good seeing you, bye bye !\n");
       return 0;
     }

@@ -4,12 +4,18 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "parser.h"
 #define STRSIZE 1024
 
-int handleInternals(char *path, char *buffer, int index, char *currentPath){
+int handleInternals(char *path, char *buffer, int index){
   const char exitCommand[] = "exit";
   const char helpCommand[] = "help";
+  char currentPath[STRSIZE*4];
+
+  getcwd(currentPath, sizeof(currentPath));
+  printf("Local path : %s\n", currentPath);
+
   if(strcmp(exitCommand, path) == 0){//if the user request to quit
     return 0; //we exit the loop after freeing memory
   } else if (strcmp(helpCommand, path) == 0){//If the user request help
@@ -23,9 +29,9 @@ int handleInternals(char *path, char *buffer, int index, char *currentPath){
       return 1;
     }
     if(*newDirectory == '/'){//Absolute path
-      DIR* dir = opendir(newDirectory);
-      if (dir)  strcpy(currentPath, newDirectory); //Directory exists
-      else if (errno == ENOENT) fprintf(stderr, "%s : directory does not exists\n", newDirectory);
+      if (chdir(newDirectory) == -1){
+        fprintf(stderr, "%s : error accessing directory\n", newDirectory);
+      }
     } else if(*newDirectory == '.' && newDirectory[1] == '.'){//Go up one node in the file tree
 
       //Find last '/' in path
@@ -39,22 +45,20 @@ int handleInternals(char *path, char *buffer, int index, char *currentPath){
         }
       }
 
-      currentPath[lastIndexOfOccurence] = '\0';//Remove the end of the path
-
+      currentPath[lastIndexOfOccurence] = '\0'; //Remove the end of the path
+      chdir(currentPath);
     } else if(*newDirectory == '~'){//Go back to home directory
-      strcpy(currentPath, "/home");
-    } else {
-      char *temp = malloc(sizeof(char)*STRSIZE*4);
-      strcpy(temp, currentPath);//Backup the current path in case the directory does not exists
-      strcat(currentPath, "/");
-      strcat(currentPath, newDirectory);
-      DIR* dir = opendir(currentPath);
-      if (errno == ENOENT){//If directory does not exists, reverts to previous position
-        fprintf(stderr, "%s : directory does not exists\n", currentPath);
-        strcpy(currentPath, temp);
+      chdir("/home");
+    } else {//Relative path
+      if(strlen(currentPath) > 1){//We are not in the root directory
+        strcat(currentPath, "/");
       }
-      free(temp);
+      strcat(currentPath, newDirectory);
+      if (chdir(currentPath) == -1){
+        fprintf(stderr, "%s : error accessing directory\n", currentPath);
+      }
     }
     return 1;
   }
+  return -1;
 }
