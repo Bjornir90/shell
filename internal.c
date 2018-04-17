@@ -14,7 +14,6 @@ int handleInternals(char *path, char *buffer, int index){
   char currentPath[STRSIZE*4];
 
   getcwd(currentPath, sizeof(currentPath));
-  printf("Local path : %s\n", currentPath);
 
   if(strcmp(exitCommand, path) == 0){//if the user request to quit
     return 0; //we exit the loop after freeing memory

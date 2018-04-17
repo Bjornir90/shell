@@ -62,7 +62,6 @@ int main(int argc, char * argv[]){
     int internalResult = handleInternals(path, buffer, index, currentPath);
     if(internalResult == 1){//A command has been found and we should quit this iteration
       getcwd(currentPath, sizeof(currentPath));
-      printf("Path : %s\n", currentPath);
       continue;
     } else if(internalResult == 0){
       shouldQuit = 1;
