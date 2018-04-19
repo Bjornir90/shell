@@ -85,6 +85,50 @@ int handleInternals(char *path, char *buffer, int index){
 
     close(file);
     return 1;
+  } else if (strcmp(path, "pid") == 0){
+    printf("Process ID : %d\n", getpid());
+    return 1;
+  } else if (strcmp(path, "ls") == 0){
+    char argument[STRSIZE*4];
+    char source[STRSIZE*4];
+    int listAllFiles = 0;
+    int detailsRequired = 0;
+    char lastChar = buffer[index];
+    while (lastChar != '\0' && lastChar != '\n'){
+      index = getNextArgument(++index, buffer, argument, ' ');
+      if (index > -1){
+        if (*argument != '-'){
+          strcpy(source, argument);
+        } else {
+          if (strcmp(argument, "-a") == 0){
+            listAllFiles = 1;
+          } else if (strcmp(argument, "-l") == 0){
+            detailsRequired = 1;
+          }
+        }
+      } else {
+        break;
+      }
+      lastChar = buffer[index];
+    }
+    if(strcmp(source, "") == 0 || strcmp(source, ".") == 0){
+      getcwd(source, sizeof(source));
+    }
+    struct stat source_stat;
+    stat(source, &source_stat);
+    int isDir = S_ISDIR(source_stat.st_mode);
+    if(!isDir){
+      fprintf(stderr, "ls : input is not a directory\n");
+      return 1;
+    }
+    DIR *dirOrigin = opendir(source);
+    struct dirent * dir = malloc(sizeof(struct dirent));
+    while ((dir = readdir(dirOrigin)) != NULL) {
+      if(*dir->d_name == '.' && !listAllFiles) continue; //We don't print files starting with '.'
+      //TODO : manage -l command
+      printf("%s\n", dir->d_name);
+    }
+    return 1;
   }
   return -1;
 }
