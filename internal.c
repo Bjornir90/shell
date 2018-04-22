@@ -161,10 +161,9 @@ int handleInternals(char *path, char *buffer, int index){
     }
 
     struct dirent ** list = malloc(sizeof(struct dirent *));
-    int numberOfFiles = getAllFiles(source, list);
+    int numberOfFiles = getAllFiles(source, &list);
     int i;
     for (i=0; i<numberOfFiles; i++){
-      printf("%d\n", i);
       struct dirent * file = list[i];
       printf("%s\n", file->d_name);
     }

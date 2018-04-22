@@ -71,21 +71,20 @@ int copyFolder(char* source, char* dest)
 }
 
 //return number of files found; list contains dirent of each file
-int getAllFiles(char * path, struct dirent ** list){
+int getAllFiles(char * path, struct dirent *** list){
   DIR* workingDir = opendir(path);
   struct dirent * dir = malloc(sizeof(struct dirent));
   int numberOfFiles = 0;
 
   while ((dir = readdir(workingDir)) != NULL){
     if(strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){
-      printf("%d:%s:%p allocating block of %d\n", numberOfFiles, dir->d_name, dir, sizeof(struct dirent *)*++numberOfFiles);
-      list = realloc(list, sizeof(struct dirent *)*++numberOfFiles);
-      list[numberOfFiles-1] = dir;
-      printf("%s:%p\n", list[numberOfFiles-1]->d_name, list[numberOfFiles-1]);
-      dir = malloc(sizeof(struct dirent));//We allocate a new one each time to not overwrite the preceding dir
+      *list = realloc(*list, sizeof(struct dirent *)*++numberOfFiles);
+      if(*list == NULL){
+        fprintf(stderr, "Could not reallocate memory\n");
+      }
+      (*list)[numberOfFiles-1] = dir;
     }
   }
-  //free(dir);//We allocate one dir too much
-  printf("Listed %d files\n", numberOfFiles);
+  free(dir);
   return numberOfFiles;
 }
