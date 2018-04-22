@@ -129,6 +129,8 @@ int handleInternals(char *path, char *buffer, int index){
       printf("%s\n", dir->d_name);
     }
     return 1;
+  } else if (strcmp(path, "find")){
+    
   }
   return -1;
 }
