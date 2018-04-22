@@ -42,7 +42,7 @@ int copyFolder(char* source, char* dest)
 {
   struct stat source_stat;
   stat(source, &source_stat);
-  bool isDir = S_ISDIR(source_stat.st_mode);
+  int isDir = S_ISDIR(source_stat.st_mode);
   DIR *dirOrigin = opendir(source);
   struct dirent * dir = malloc(sizeof(struct dirent));
   char * pathOrigin = calloc(5000, sizeof(char));
@@ -58,9 +58,9 @@ int copyFolder(char* source, char* dest)
     pathDest = strcat(pathDest, dir->d_name);
     struct stat origin_stat;
     stat(pathOrigin, &origin_stat);
-    bool isDirOrigin = S_ISDIR(origin_stat.st_mode);
+    int isDirOrigin = S_ISDIR(origin_stat.st_mode);
     if(isDirOrigin){//if it is a sub_directory, we recursively call the function
-      mkdir(pathDest);
+      mkdir(pathDest, 0777);
       return copyFolder(pathOrigin, pathDest);
     }else if( strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){//If it's a file and not the .. or ., we copy
       printf("Origine : %s Destination : %s\n", pathOrigin, pathDest);
@@ -68,4 +68,24 @@ int copyFolder(char* source, char* dest)
     }
   }
   return 0;
+}
+
+//return number of files found; list contains dirent of each file
+int getAllFiles(char * path, struct dirent ** list){
+  DIR* workingDir = opendir(path);
+  struct dirent * dir = malloc(sizeof(struct dirent));
+  int numberOfFiles = 0;
+
+  while ((dir = readdir(workingDir)) != NULL){
+    if(strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){
+      printf("%d:%s:%p allocating block of %d\n", numberOfFiles, dir->d_name, dir, sizeof(struct dirent *)*++numberOfFiles);
+      list = realloc(list, sizeof(struct dirent *)*++numberOfFiles);
+      list[numberOfFiles-1] = dir;
+      printf("%s:%p\n", list[numberOfFiles-1]->d_name, list[numberOfFiles-1]);
+      dir = malloc(sizeof(struct dirent));//We allocate a new one each time to not overwrite the preceding dir
+    }
+  }
+  //free(dir);//We allocate one dir too much
+  printf("Listed %d files\n", numberOfFiles);
+  return numberOfFiles;
 }
