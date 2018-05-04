@@ -71,6 +71,7 @@ int copyFolder(char* source, char* dest)
 }
 
 //return number of files found; list contains dirent of each file
+//list should have subdirectories content as well (recursive call)
 int getAllFiles(char * path, struct dirent *** list){
   DIR* workingDir = opendir(path);
   struct dirent * dir = malloc(sizeof(struct dirent));

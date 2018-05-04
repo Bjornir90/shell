@@ -47,7 +47,10 @@ int main(int argc, char * argv[]){
     char * buffer = calloc(sizeof(char), STRSIZE);
     printf("%s>", currentPath);
     fgets(buffer, STRSIZE, stdin);
-
+    if (buffer == NULL){
+      printf("Bye bye !\n");
+      return 0;
+    }
 
     char iterator = *buffer;
 

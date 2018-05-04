@@ -138,6 +138,7 @@ int handleInternals(char *path, char *buffer, int index){
     char source[STRSIZE*4];
     char name[STRSIZE];
     char toExecute[STRSIZE];
+    int searchName = 0, applyExec = 0;
     getcwd(source, sizeof(source));
 
     if (numberOfArgs > 0){
@@ -154,8 +155,10 @@ int handleInternals(char *path, char *buffer, int index){
       for (i=0; i<numberOfArgs-1; i++){
         if(strcmp(args[i], "-name") == 0){
           strcpy(name, args[++i]);
+          searchName = 1;
         } else if(strcmp(args[i], "-exec") == 0){
           strcpy(toExecute, args[++i]);
+          applyExec = 1;
         }
       }
     }
