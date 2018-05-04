@@ -8,7 +8,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "parser.h"
+#include "file.h"
 #define STRSIZE 1024
+
+//NOTE: a return value of 1 does not indicate success, but only that an internal function has been found
 
 int handleInternals(char *path, char *buffer, int index){
   const char exitCommand[] = "exit";
@@ -85,6 +88,94 @@ int handleInternals(char *path, char *buffer, int index){
 
     close(file);
     return 1;
+<<<<<<< HEAD
+=======
+  } else if (strcmp(path, "pid") == 0){
+    printf("Process ID : %d\n", getpid());
+    return 1;
+  } else if (strcmp(path, "ls") == 0){
+    char argument[STRSIZE*4];
+    char source[STRSIZE*4];
+    int listAllFiles = 0;
+    int detailsRequired = 0;
+    char lastChar = buffer[index];
+    while (lastChar != '\0' && lastChar != '\n'){
+      index = getNextArgument(++index, buffer, argument, ' ');
+      if (index > -1){
+        if (*argument != '-'){//We found the path
+          strcpy(source, argument);
+        } else {
+          if (strcmp(argument, "-a") == 0){
+            listAllFiles = 1;
+          } else if (strcmp(argument, "-l") == 0){
+            detailsRequired = 1;
+          }
+        }
+      } else {
+        break;
+      }
+      lastChar = buffer[index];
+    }
+    if(strcmp(source, "") == 0 || strcmp(source, ".") == 0){
+      getcwd(source, sizeof(source));
+    }
+    struct stat source_stat;
+    stat(source, &source_stat);
+    int isDir = S_ISDIR(source_stat.st_mode);
+    if(!isDir){
+      fprintf(stderr, "ls : input is not a directory\n");
+      return 1;
+    }
+    DIR *dirOrigin = opendir(source);
+    struct dirent * dir = malloc(sizeof(struct dirent));
+    while ((dir = readdir(dirOrigin)) != NULL) {
+      if(*dir->d_name == '.' && !listAllFiles) continue; //We don't print files starting with '.'
+      //TODO : manage -l command
+      printf("%s\n", dir->d_name);
+    }
+    return 1;
+  } else if (strcmp(path, "find") == 0){
+    char ** args = malloc(sizeof(char *));
+    int numberOfArgs = getAllArguments(++index, buffer, args, ' ');
+    char source[STRSIZE*4];
+    char name[STRSIZE];
+    char toExecute[STRSIZE];
+    int searchName = 0, applyExec = 0;
+    getcwd(source, sizeof(source));
+
+    if (numberOfArgs > 0){
+      if(args[0][0] != '-'){//first argument is path
+        if(args[0][0] == '/'){//absolute path
+          strcpy(source, args[0]);
+        } else {
+          strcat(source, "/");
+          strcat(source, args[0]);
+        }
+      }
+      int i;
+      //-1 because the only case there isn't a pair of arguments is for the path to search, and it's already done
+      for (i=0; i<numberOfArgs-1; i++){
+        if(strcmp(args[i], "-name") == 0){
+          strcpy(name, args[++i]);
+          searchName = 1;
+        } else if(strcmp(args[i], "-exec") == 0){
+          strcpy(toExecute, args[++i]);
+          applyExec = 1;
+        }
+      }
+    }
+
+    struct dirent ** list = malloc(sizeof(struct dirent *));
+    int numberOfFiles = getAllFiles(source, &list);
+    int i;
+    for (i=0; i<numberOfFiles; i++){
+      struct dirent * file = list[i];
+      printf("%s\n", file->d_name);
+    }
+
+
+    return 1;
+>>>>>>> untested
   }
   return -1;
 }
