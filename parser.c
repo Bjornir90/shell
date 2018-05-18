@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #define STRSIZE 1024
 
 int getNextArgument(int index, char * input, char * argument, char separator){
@@ -11,6 +12,7 @@ int getNextArgument(int index, char * input, char * argument, char separator){
 	}
 	while(iterator != separator && iterator != '\n'){//Loop to the end of the word
 		argument[indexArgument] = iterator;//Build argument string
+		printf(" %c ", iterator);
 		indexArgument++;
 		index++;
 		iterator = input[index];

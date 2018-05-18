@@ -51,7 +51,7 @@ int main(int argc, char * argv[]){
 			return 0;
 		}
 
-		numberOfArgs = getAllArguments(0, buffer, args, " ");
+		numberOfArgs = getAllArguments(0, buffer, args, ' ');
 		int result = handleInternals(args, numberOfArgs);
 		if(result == 1){
 			continue; //A command has been found, and so we go to the next commmand
