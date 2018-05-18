@@ -19,6 +19,10 @@ int handleInternals(char **args, int numberOfArgs){
 	char currentPath[STRSIZE*4];
 	char path[STRSIZE*4];//First argument is command name
 	strcpy(path, args[0]);
+	printf("Number of args = %d\n", numberOfArgs);
+	for(int i = 0; i<numberOfArgs; i++){
+		printf("%d '%s'\n", i, args[i]);
+	}
 
 	getcwd(currentPath, sizeof(currentPath));
 
@@ -30,16 +34,15 @@ int handleInternals(char **args, int numberOfArgs){
 	} else if (strcmp("cd", path) == 0){//User request to change directory
 		char newDirectory[STRSIZE*4];
 		strcpy(newDirectory, args[1]);
-		printf("%s\n", newDirectory);
 		if(strcmp(newDirectory, "") == 0){
 			fprintf(stderr, "Empty directory\n");
 			return 1;
 		}
-		if(*newDirectory == '/'){//Absolute path
+		if(newDirectory[0] == '/'){//Absolute path
 			if (chdir(newDirectory) == -1){
 				fprintf(stderr, "%s : error accessing directory\n", newDirectory);
 			}
-		} else if(*newDirectory == '.' && newDirectory[1] == '.'){//Go up one node in the file tree
+		} else if(newDirectory[0] == '.' && newDirectory[1] == '.'){//Go up one node in the file tree
 
 			//Find last '/' in path
 			int lastIndexOfOccurence = 0;

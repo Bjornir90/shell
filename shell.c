@@ -34,7 +34,6 @@ char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 int main(int argc, char * argv[]){
 	//char *currentPath = calloc(STRSIZE*4, sizeof(char));
 	char currentPath[STRSIZE*4];
-	getcwd(currentPath, sizeof(currentPath));
 	int redirectCode;
 	int shouldQuit = 0;
 	printf("You can type \"help\" to receive help\n");
@@ -44,6 +43,7 @@ int main(int argc, char * argv[]){
 		int numberOfArgs;
 		int index = 0;
 		char * buffer = calloc(sizeof(char), STRSIZE);
+		getcwd(currentPath, sizeof(currentPath));
 		printf("%s>", currentPath);
 		fgets(buffer, STRSIZE, stdin);
 		if (buffer == NULL){
