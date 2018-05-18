@@ -1,0 +1,14 @@
+shell: parser.o file.o shell.o internal.o
+	gcc -o shell parser.o file.o shell.o internal.o
+
+parser.o: parser.c
+	gcc -c parser.o parser.c
+
+file.o: file.c
+	gcc -c file.o file.c
+
+internal.o: internal.c parser.h file.h
+	gcc -c internal.o internal.c
+
+shell.o: shell.c
+	gcc -c shell.o shell.c
