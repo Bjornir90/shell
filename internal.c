@@ -143,9 +143,9 @@ int handleInternals(char **args, int numberOfArgs){
 		int searchName = 0, applyExec = 0;
 		getcwd(source, sizeof(source));
 
-		if (numberOfArgs > 0){
-			if(args[0][0] != '-'){//first argument is path
-				if(args[0][0] == '/'){//absolute path
+		if (numberOfArgs > 1){
+			if(args[1][0] != '-'){//first argument is path
+				if(args[1][0] == '/'){//absolute path
 					strcpy(source, args[0]);
 				} else {
 					strcat(source, "/");
