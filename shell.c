@@ -64,7 +64,31 @@ int main(int argc, char * argv[]){
 			free(buffer);
 			return 0;
 		}
-		char * path = args[0];
+
+		char *path = args[0];
+		char ***argumentsForEachCommand = malloc(sizeof(char **));
+		char **commands = malloc(sizeof(char *));
+		int numberOfCommands = 1, numberOfArguments = 0;
+
+		commands[0] = args[0];
+
+		for(int i = 1; i<numberOfArguments; i++){//Parse each individual command, for pipes
+			char **argumentsOfTheCommand = malloc(sizeof(char *));
+			if(args[i-1] == "|"){//If previous argument is a pipe, we have a command
+				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
+				commands[numberOfCommands-1] = args[i];
+				if(numberOfArguments>0){
+					argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
+					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
+				} else {
+					argumentsForEachCommand[numberOfCommands-1] = NULL;
+				}
+				numberOfArguments = 0;
+			} else if(args[i] != "|"){//We have an argument
+				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*++numberOfArguments);
+				argumentsOfTheCommand[numberOfArguments-1] = args[i];
+			}
+		}
 
 		//Needed to redirect std streams
 		int file;
@@ -73,56 +97,51 @@ int main(int argc, char * argv[]){
 		if(pid == 0){//In the child
 			//Redirect as needed
 			/*if(shouldRedirect){
-			char * fileName = calloc(sizeof(char), STRSIZE);
-			getNextArgument(++index, buffer, fileName, ' ');
-			if(strcmp(fileName, "") == 0){//Empty string
-			fprintf(stderr, "Empty filename\n");
-			continue;
-		} else {
-		file = open(fileName, O_RDWR|O_CREAT);
-		if(file <= 0){
-		fprintf(stderr, "Could not open file\n");
-		continue;
-	}
-}
-//0 : stdin, 1 : stdout, 2 : stderr
-/*if(redirectCode){//We want to change the output
-dup2(file, 1);
-} else {//We want to select an input
-dup2(file, 0);
-}
-dup2(file, redirectCode);
-}
-*/
-numberOfArgs++;
-args = realloc(args, sizeof(char *)*numberOfArgs);
-args[numberOfArgs-1] = NULL;//As required in the specifications
-int result;
-if(access(path, F_OK) == -1){
-	char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
-	if(strcmp(newPath, "") != 0){
-		result = execv(newPath, args);
-	} else {
-		errno = ENOENT;//File not found
-		result = -1;
-	}
-} else {
-	result = execv(path, args);
-}
-if(result == -1) {
-	printf("An error has occured\n");
-	printf("%s\n", strerror(errno));
-}
-close(file);
-break;//we exit the loop and kill the child
-} else{
-	int status;
-	waitpid(pid, &status, 0);
-}
-free(buffer);
-free(args);
-free(path);
-}
+				char * fileName = calloc(sizeof(char), STRSIZE);
+				getNextArgument(++index, buffer, fileName, ' ');
+				if(strcmp(fileName, "") == 0){//Empty string
+					fprintf(stderr, "Empty filename\n");
+					continue;
+				} else {
+					file = open(fileName, O_RDWR|O_CREAT);
+					if(file <= 0){
+						fprintf(stderr, "Could not open file\n");
+						continue;
+					}
+				}
+				//0 : stdin, 1 : stdout, 2 : stderr
+				dup2(file, redirectCode);
+			}*/
 
-return 0;
+			numberOfArgs++;
+			args = realloc(args, sizeof(char *)*numberOfArgs);
+			args[numberOfArgs-1] = NULL;//As required in the specifications
+			int result;
+			if(access(path, F_OK) == -1){
+				char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
+				if(strcmp(newPath, "") != 0){
+					result = execv(newPath, args);
+				} else {
+					errno = ENOENT;//File not found
+					result = -1;
+				}
+			} else {
+				result = execv(path, args);
+			}
+			if(result == -1) {
+				printf("An error has occured\n");
+				printf("%s\n", strerror(errno));
+			}
+			close(file);
+			break;//we exit the loop and kill the child
+		} else{
+			int status;
+			waitpid(pid, &status, 0);
+		}
+		free(buffer);
+		free(args);
+		free(path);
+	}
+
+	return 0;
 }

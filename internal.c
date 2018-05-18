@@ -19,10 +19,6 @@ int handleInternals(char **args, int numberOfArgs){
 	char currentPath[STRSIZE*4];
 	char path[STRSIZE*4];//First argument is command name
 	strcpy(path, args[0]);
-	printf("Number of args = %d\n", numberOfArgs);
-	for(int i = 0; i<numberOfArgs; i++){
-		printf("%d '%s'\n", i, args[i]);
-	}
 
 	getcwd(currentPath, sizeof(currentPath));
 
