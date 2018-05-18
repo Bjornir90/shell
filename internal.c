@@ -108,7 +108,7 @@ int handleInternals(char **args, int numberOfArgs){
 		int detailsRequired = 0;
 		for (i = 1; i < numberOfArgs; i++){
 			strcpy(argument, args[i]);
-			if (*argument != '-'){//We found the path
+			if (argument[0] != '-'){//We found the path
 				strcpy(source, argument);
 			} else {
 				if (strcmp(argument, "-a") == 0){
