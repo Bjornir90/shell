@@ -71,6 +71,10 @@ int main(int argc, char * argv[]){
 		int numberOfCommands = 1, numberOfArguments = 0;
 
 		commands[0] = args[0];
+		argumentsOfTheCommand[0] = malloc(sizeof(char));
+		argumentsOfTheCommand[0][0] = 0;//The first cell is the length of the table [maxSize == 256]
+		//As a result of this, argumentsOfTheCommand is not really 0-indexed anymore, at leat for the arguments themselves
+
 		for(int i = 0; i<numberOfArgs; i++){
 			printf("args[%d/%d] = %s\n", i+1, numberOfArgs, args[i]);
 		}
@@ -80,29 +84,27 @@ int main(int argc, char * argv[]){
 
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
+				argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
 				if(numberOfArguments>0){
-					argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
-					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
+					argumentsForEachCommand[numberOfCommands-2] = argumentsOfTheCommand;
 				} else {
-					argumentsForEachCommand[numberOfCommands-1] = NULL;
+					argumentsForEachCommand[numberOfCommands-2] = NULL;
 				}
 				numberOfArguments = 0;
 				argumentsOfTheCommand = malloc(sizeof(char *));
+				argumentsOfTheCommand[0] = malloc(sizeof(char));
+				argumentsOfTheCommand[0][0] = 0;
 
 			} else if(strcmp(args[i], "|") != 0) {//We have an argument
 
 				numberOfArguments++;
-				if(numberOfArguments > 1){
-					argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments);
-				}
-				argumentsOfTheCommand[numberOfArguments-1] = args[i];
+				printf("%d\n", numberOfArguments);
+				argumentsOfTheCommand[0][0] = numberOfArguments;//Add 1 to the number of cells
+				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments+1);
+				argumentsOfTheCommand[numberOfArguments] = args[i];
 
-				if (i == numberOfArgs-1 && numberOfCommands == 1){//We reached the last arg in args and we have only one command
-					if(numberOfArguments>0){
-					   argumentsForEachCommand[0] = argumentsOfTheCommand;
-				   } else {
-					   argumentsForEachCommand[0] = NULL;
-				   }
+				if (i == numberOfArgs-1){//We reached the last arg in args and we have only one command
+					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
 				}
 
 			} else {
@@ -111,11 +113,12 @@ int main(int argc, char * argv[]){
 
 			}
 		}
+		printf("First number of arguments : %d\nSecond : %d\n", argumentsForEachCommand[0][0][0], argumentsForEachCommand[1][0][0]);
 
 		//NOTE : debug only
 		for (int i=0; i<numberOfCommands; i++){
 			printf("Command : %s\n", commands[i]);
-			for(int j=0; j<numberOfArguments; j++){
+			for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
 				printf("\tArgument %d : %s\n", j, argumentsForEachCommand[i][j]);
 			}
 		}
@@ -127,51 +130,51 @@ int main(int argc, char * argv[]){
 		if(pid == 0){//In the child
 			//Redirect as needed
 			/*if(shouldRedirect){
-				char * fileName = calloc(sizeof(char), STRSIZE);
-				getNextArgument(++index, buffer, fileName, ' ');
-				if(strcmp(fileName, "") == 0){//Empty string
-					fprintf(stderr, "Empty filename\n");
-					continue;
-				} else {
-					file = open(fileName, O_RDWR|O_CREAT);
-					if(file <= 0){
-						fprintf(stderr, "Could not open file\n");
-						continue;
-					}
-				}
-				//0 : stdin, 1 : stdout, 2 : stderr
-				dup2(file, redirectCode);
-			}*/
-
-			numberOfArgs++;
-			args = realloc(args, sizeof(char *)*numberOfArgs);
-			args[numberOfArgs-1] = NULL;//As required in the specifications
-			int result;
-			if(access(path, F_OK) == -1){
-				char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
-				if(strcmp(newPath, "") != 0){
-					result = execv(newPath, args);
-				} else {
-					errno = ENOENT;//File not found
-					result = -1;
-				}
-			} else {
-				result = execv(path, args);
-			}
-			if(result == -1) {
-				printf("An error has occured\n");
-				printf("%s\n", strerror(errno));
-			}
-			close(file);
-			break;//we exit the loop and kill the child
-		} else{
-			int status;
-			waitpid(pid, &status, 0);
-		}
-		free(buffer);
-		free(args);
-		free(path);
+			char * fileName = calloc(sizeof(char), STRSIZE);
+			getNextArgument(++index, buffer, fileName, ' ');
+			if(strcmp(fileName, "") == 0){//Empty string
+			fprintf(stderr, "Empty filename\n");
+			continue;
+		} else {
+		file = open(fileName, O_RDWR|O_CREAT);
+		if(file <= 0){
+		fprintf(stderr, "Could not open file\n");
+		continue;
 	}
+}
+//0 : stdin, 1 : stdout, 2 : stderr
+dup2(file, redirectCode);
+}*/
 
-	return 0;
+numberOfArgs++;
+args = realloc(args, sizeof(char *)*numberOfArgs);
+args[numberOfArgs-1] = NULL;//As required in the specifications
+int result;
+if(access(path, F_OK) == -1){
+	char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
+	if(strcmp(newPath, "") != 0){
+		result = execv(newPath, args);
+	} else {
+		errno = ENOENT;//File not found
+		result = -1;
+	}
+} else {
+	result = execv(path, args);
+}
+if(result == -1) {
+	printf("An error has occured\n");
+	printf("%s\n", strerror(errno));
+}
+close(file);
+break;//we exit the loop and kill the child
+} else{
+	int status;
+	waitpid(pid, &status, 0);
+}
+free(buffer);
+free(args);
+free(path);
+}
+
+return 0;
 }
