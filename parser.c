@@ -20,7 +20,7 @@ int getNextArgument(int index, char * input, char * argument, char separator){
 	return index;
 }
 
-int getAllArguments(int index, char * input, char ** result, char separator){
+int getAllArguments(int index, char * input, char *** result, char separator){
 	char lastChar = input[index];
 	int numberOfArgs = 0;
 	while(lastChar != '\n' && lastChar != '\0'){//Loop to the end of the string
@@ -28,8 +28,8 @@ int getAllArguments(int index, char * input, char ** result, char separator){
 		index = getNextArgument(index, input, argument, separator);
 		if(index == -1) return numberOfArgs;
 		lastChar = input[++index];
-		result = realloc(result, sizeof(char *)*++numberOfArgs);//Dynamically allocate memory to accept any number of arguments
-		result[numberOfArgs-1] = argument;
+		*result = realloc(*result, sizeof(char *)*++numberOfArgs);//Dynamically allocate memory to accept any number of arguments
+		(*result)[numberOfArgs-1] = argument;
 	}
 	return numberOfArgs;
 }

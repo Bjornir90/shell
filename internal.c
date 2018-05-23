@@ -13,7 +13,7 @@
 
 //NOTE: a return value of 1 does not indicate success, but only that an internal function has been found
 
-int handleInternals(char **args, int numberOfArgs){
+int handleInternals(const char **args, int numberOfArgs){
 	const char exitCommand[] = "exit";
 	const char helpCommand[] = "help";
 	char currentPath[STRSIZE*4];

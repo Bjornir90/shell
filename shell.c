@@ -50,8 +50,7 @@ int main(int argc, char * argv[]){
 			printf("Bye bye !\n");
 			return 0;
 		}
-
-		numberOfArgs = getAllArguments(0, buffer, args, ' ');
+		numberOfArgs = getAllArguments(0, buffer, &args, ' ');
 		int result = handleInternals(args, numberOfArgs);
 		if(result == 1){
 			continue; //A command has been found, and so we go to the next commmand
@@ -68,21 +67,19 @@ int main(int argc, char * argv[]){
 		char *path = args[0];
 		char ***argumentsForEachCommand = malloc(sizeof(char **));
 		char **commands = malloc(sizeof(char *));
+		char **argumentsOfTheCommand = malloc(sizeof(char *));
 		int numberOfCommands = 1, numberOfArguments = 0;
 
 		commands[0] = args[0];
-		printf("%d\n", numberOfArgs);
-		for(int i=0; i<numberOfArgs; i++){
-			printf("%s\n", args[i]);
+		for(int i = 0; i<numberOfArgs; i++){
+			printf("args[%d/%d] = %s\n", i+1, numberOfArgs, args[i]);
 		}
 
 		for(int i = 1; i<numberOfArgs; i++){//Parse each individual command, for pipes
-			char **argumentsOfTheCommand = malloc(sizeof(char *));
-			if(args[i-1] == "|"){//If previous argument is a pipe, we have a command
+			if(strcmp(args[i-1], "|") == 0){//If previous argument is a pipe, we have a command
 
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
-				printf("Command found : %s\n", args[i]);
 				if(numberOfArguments>0){
 					argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
 					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
@@ -90,12 +87,15 @@ int main(int argc, char * argv[]){
 					argumentsForEachCommand[numberOfCommands-1] = NULL;
 				}
 				numberOfArguments = 0;
+				argumentsOfTheCommand = malloc(sizeof(char *));
 
-			} else if(args[i] != "|"){//We have an argument
+			} else if(strcmp(args[i], "|") != 0) {//We have an argument
 
-				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*++numberOfArguments);
+				numberOfArguments++;
+				if(numberOfArguments > 1){
+					argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments);
+				}
 				argumentsOfTheCommand[numberOfArguments-1] = args[i];
-				printf("Argument found : %s\n Argument passed : %s\n", args[i], argumentsOfTheCommand[numberOfArguments-1]);
 
 				if (i == numberOfArgs-1 && numberOfCommands == 1){//We reached the last arg in args and we have only one command
 					if(numberOfArguments>0){
@@ -104,9 +104,11 @@ int main(int argc, char * argv[]){
 					   argumentsForEachCommand[0] = NULL;
 				   }
 				}
-				
+
 			} else {
+
 				printf("Pipe found\n");
+
 			}
 		}
 
@@ -114,7 +116,7 @@ int main(int argc, char * argv[]){
 		for (int i=0; i<numberOfCommands; i++){
 			printf("Command : %s\n", commands[i]);
 			for(int j=0; j<numberOfArguments; j++){
-				printf("\tArgument : %s\n", argumentsForEachCommand[i][j]);
+				printf("\tArgument %d : %s\n", j, argumentsForEachCommand[i][j]);
 			}
 		}
 
