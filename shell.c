@@ -84,16 +84,18 @@ int main(int argc, char * argv[]){
 
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
+				printf("Command %d : %s\n", numberOfCommands, args[i]);
+
 				argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
-				if(numberOfArguments>0){
-					argumentsForEachCommand[numberOfCommands-2] = argumentsOfTheCommand;
-				} else {
-					argumentsForEachCommand[numberOfCommands-2] = NULL;
-				}
+				argumentsForEachCommand[numberOfCommands-2] = argumentsOfTheCommand;
+
 				numberOfArguments = 0;
 				argumentsOfTheCommand = malloc(sizeof(char *));
 				argumentsOfTheCommand[0] = malloc(sizeof(char));
 				argumentsOfTheCommand[0][0] = 0;
+
+				if(i == numberOfArgs-1)
+					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
 
 			} else if(strcmp(args[i], "|") != 0) {//We have an argument
 
@@ -103,9 +105,8 @@ int main(int argc, char * argv[]){
 				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments+1);
 				argumentsOfTheCommand[numberOfArguments] = args[i];
 
-				if (i == numberOfArgs-1){//We reached the last arg in args and we have only one command
+				if (i == numberOfArgs-1)//We reached the last arg in args
 					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
-				}
 
 			} else {
 
@@ -113,7 +114,8 @@ int main(int argc, char * argv[]){
 
 			}
 		}
-		printf("First number of arguments : %d\nSecond : %d\n", argumentsForEachCommand[0][0][0], argumentsForEachCommand[1][0][0]);
+		printf("Number of commands : %d\n", numberOfCommands);
+		// printf("First number of arguments : %d\nSecond : %d\n", argumentsForEachCommand[0][0][0], argumentsForEachCommand[1][0][0]);
 
 		//NOTE : debug only
 		for (int i=0; i<numberOfCommands; i++){
