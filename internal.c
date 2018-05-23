@@ -102,6 +102,9 @@ int handleInternals(char **args, int numberOfArgs){
 		int i;
 		int listAllFiles = 0;
 		int detailsRequired = 0;
+
+		strcpy(source, "");
+
 		for (i = 1; i < numberOfArgs; i++){
 			strcpy(argument, args[i]);
 			if (argument[0] != '-'){//We found the path
@@ -115,8 +118,9 @@ int handleInternals(char **args, int numberOfArgs){
 			}
 		}
 		if(strcmp(source, "") == 0 || strcmp(source, ".") == 0){
-			getcwd(source, sizeof(source));
+			printf("CWD : %s\n", getcwd(source, sizeof(source)));
 		}
+		printf("ls : source : %s\n", source);
 		struct stat source_stat;
 		stat(source, &source_stat);
 		int isDir = S_ISDIR(source_stat.st_mode);

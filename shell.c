@@ -72,11 +72,16 @@ int main(int argc, char * argv[]){
 
 		commands[0] = args[0];
 
+		for(int i=0; i<numberOfArgs; i++){
+			printf("%s\n", args[i]);
+		}
+
 		for(int i = 1; i<numberOfArguments; i++){//Parse each individual command, for pipes
 			char **argumentsOfTheCommand = malloc(sizeof(char *));
 			if(args[i-1] == "|"){//If previous argument is a pipe, we have a command
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
+				printf("Command found : %s\n", args[i]);
 				if(numberOfArguments>0){
 					argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
 					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
@@ -87,6 +92,15 @@ int main(int argc, char * argv[]){
 			} else if(args[i] != "|"){//We have an argument
 				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*++numberOfArguments);
 				argumentsOfTheCommand[numberOfArguments-1] = args[i];
+			} else {
+				printf("Pipe found\n");
+			}
+		}
+
+		for (int i=0; i<numberOfCommands; i++){
+			printf("Command : %s\n", commands[i]);
+			for(int j=0; j<numberOfArgs; j++){
+				printf("\tArgument : %s\n", argumentsForEachCommand[i][j]);
 			}
 		}
 
