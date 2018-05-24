@@ -82,6 +82,10 @@ int main(int argc, char * argv[]){
 		for(int i = 1; i<numberOfArgs; i++){//Parse each individual command, for pipes
 			if(strcmp(args[i-1], "|") == 0){//If previous argument is a pipe, we have a command
 
+				if(strcmp(args[i], "|") == 0){
+					argumentsForEachCommand[numberOfCommands-1] = argumentsOfTheCommand;
+					continue;
+				}
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
 				printf("Command %d : %s\n", numberOfCommands, args[i]);
