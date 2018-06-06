@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <time.h>
 #include "parser.h"
 #include "internal.h"
 #define STRSIZE 1024
@@ -51,7 +52,7 @@ int main(int argc, char * argv[]){
 			return 0;
 		}
 		numberOfArgs = getAllArguments(0, buffer, &args, ' ');
-		int result = handleInternals(args, numberOfArgs);
+		/*int result = handleInternals(args, numberOfArgs);
 		if(result == 1){
 			continue; //A command has been found, and so we go to the next commmand
 		} else if(result == 0){
@@ -62,7 +63,7 @@ int main(int argc, char * argv[]){
 			free(args);
 			free(buffer);
 			return 0;
-		}
+		}*/
 
 		char *path = args[0];
 		char ***argumentsForEachCommand = malloc(sizeof(char **));
@@ -104,7 +105,6 @@ int main(int argc, char * argv[]){
 			} else if(strcmp(args[i], "|") != 0) {//We have an argument
 
 				numberOfArguments++;
-				printf("%d\n", numberOfArguments);
 				argumentsOfTheCommand[0][0] = numberOfArguments;//Add 1 to the number of cells
 				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments+1);
 				argumentsOfTheCommand[numberOfArguments] = args[i];
@@ -119,8 +119,6 @@ int main(int argc, char * argv[]){
 			}
 		}
 		printf("Number of commands : %d\n", numberOfCommands);
-		// printf("First number of arguments : %d\nSecond : %d\n", argumentsForEachCommand[0][0][0], argumentsForEachCommand[1][0][0]);
-
 		//NOTE : debug only
 		for (int i=0; i<numberOfCommands; i++){
 			printf("Command : %s\n", commands[i]);
@@ -130,9 +128,70 @@ int main(int argc, char * argv[]){
 		}
 
 		//Needed to redirect std streams
-		int file;
+		int pfd[2];
+		int result;
+		if(numberOfCommands > 1){
+			if(pipe(pfd) == -1) printf("%s\n", strerror(errno));
+		}
+		FILE *fileLog = fopen("shell.log", "w");
+		fprintf(fileLog, "Initialize log %d\n", time(NULL));
 
-		int pid = fork();
+		for (int i=0; i<numberOfCommands; i++){
+			int pid = fork();
+			if(pid == 0){//We are in the child
+				if(numberOfCommands > 1){
+					if(dup2(pfd[0], 0) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdin to pipe read end
+					if(dup2(pfd[1], 1) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdout to pipe write end
+				}
+				fprintf(fileLog, "In child\n");
+				fflush(fileLog);
+				
+				char ** arguments = malloc(sizeof(char *)*(argumentsForEachCommand[i][0][0]+2));
+				//arguments has 2 cells more than the number of arguments (end null and command name at the start), so we malloc with +2
+				arguments[0] = commands[i];//first argument given to the program is it's name
+				for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
+					arguments[j] = argumentsForEachCommand[i][j];
+					printf("%d\n", j);
+				}
+				arguments[argumentsForEachCommand[i][0][0]+1] = (char *) NULL;//As required
+				printf("Last index %d\n", argumentsForEachCommand[i][0][0]+1);
+				fprintf(fileLog, "Arguments table built\n");
+				fflush(fileLog);
+				if(access(path, F_OK) == -1){
+					char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
+					if(strcmp(newPath, "") != 0){
+						fprintf(fileLog, "Calling execv on %s\n", newPath);
+						fflush(fileLog);
+						result = execv(newPath, arguments);
+					} else {
+						errno = ENOENT;//File not found
+						result = -1;
+					}
+				} else {
+					fprintf(fileLog, "Calling execv on %s\n", path);
+					fflush(fileLog);
+					result = execv(path, arguments);
+				}
+				fprintf(fileLog, "execv failed\n");
+				fflush(fileLog);
+
+				if(result == -1) {
+					fprintf(fileLog, "An error has occured\n");
+					fprintf(fileLog, "%s\n", strerror(errno));
+					fflush(fileLog);
+				}
+				
+				fprintf(fileLog, "Killing current process (child)\n");
+				fflush(fileLog);
+				fclose(fileLog);
+				exit(1);
+			} else {
+				int status;
+				printf("Waiting on child\n");
+				waitpid(pid, &status, 0);
+			}
+		}
+		/*int pid = fork();
 		if(pid == 0){//In the child
 			//Redirect as needed
 			/*if(shouldRedirect){
@@ -151,36 +210,36 @@ int main(int argc, char * argv[]){
 //0 : stdin, 1 : stdout, 2 : stderr
 dup2(file, redirectCode);
 }*/
-
-numberOfArgs++;
-args = realloc(args, sizeof(char *)*numberOfArgs);
-args[numberOfArgs-1] = NULL;//As required in the specifications
-int result;
-if(access(path, F_OK) == -1){
-	char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
-	if(strcmp(newPath, "") != 0){
-		result = execv(newPath, args);
-	} else {
-		errno = ENOENT;//File not found
-		result = -1;
+		/*
+		numberOfArgs++;
+		args = realloc(args, sizeof(char *)*numberOfArgs);
+		args[numberOfArgs-1] = NULL;//As required in the specifications
+		int result;
+		if(access(path, F_OK) == -1){
+			char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
+			if(strcmp(newPath, "") != 0){
+				result = execv(newPath, args);
+			} else {
+				errno = ENOENT;//File not found
+				result = -1;
+			}
+		} else {
+			result = execv(path, args);
+		}
+		if(result == -1) {
+			printf("An error has occured\n");
+			printf("%s\n", strerror(errno));
+		}
+		close(file);
+		break;//we exit the loop and kill the child
+	} else{
+		int status;
+		waitpid(pid, &status, 0);
+	}*/
+		free(buffer);
+		free(args);
+		free(path);
 	}
-} else {
-	result = execv(path, args);
-}
-if(result == -1) {
-	printf("An error has occured\n");
-	printf("%s\n", strerror(errno));
-}
-close(file);
-break;//we exit the loop and kill the child
-} else{
-	int status;
-	waitpid(pid, &status, 0);
-}
-free(buffer);
-free(args);
-free(path);
-}
 
-return 0;
+	return 0;
 }
