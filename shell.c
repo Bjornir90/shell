@@ -14,9 +14,12 @@
 #include "internal.h"
 #define STRSIZE 1024
 
+FILE *fileLog;
+
 char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 	char * PATHString = getenv("PATH");
 	char * pathToCheck = calloc(sizeof(char), STRSIZE);
+	fprintf(fileLog, "Checking PATH\n");
 	int index = getNextArgument(0, PATHString, pathToCheck, ':');
 	while(strcmp(pathToCheck, "") != 0 && index != -1){
 		char * pathFinal = calloc(sizeof(char), STRSIZE*2);
@@ -24,6 +27,7 @@ char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 		strcat(pathFinal, "/");
 		strcat(pathFinal, commandName);
 		if(access(pathFinal, F_OK) != -1){
+			fprintf(fileLog, "Path : %s\n", pathFinal);
 			return pathFinal;
 		}
 		index = getNextArgument(++index, PATHString, pathToCheck, ':');
@@ -133,17 +137,24 @@ int main(int argc, char * argv[]){
 		if(numberOfCommands > 1){
 			if(pipe(pfd) == -1) printf("%s\n", strerror(errno));
 		}
-		FILE *fileLog = fopen("shell.log", "w");
-		fprintf(fileLog, "Initialize log %d\n", time(NULL));
+		fileLog = fopen("shell.log", "w");
+		fprintf(fileLog, "Initialize log %d PID : %d\n", time(NULL), getpid());
 
 		for (int i=0; i<numberOfCommands; i++){
 			int pid = fork();
 			if(pid == 0){//We are in the child
 				if(numberOfCommands > 1){
-					if(dup2(pfd[0], 0) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdin to pipe read end
-					if(dup2(pfd[1], 1) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdout to pipe write end
+					if(i>0){
+						fprintf(fileLog, "Redirecting stdin\n");
+						if(dup2(pfd[0], 0) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdin to pipe read end
+					}
+					if(i<numberOfCommands-1){
+						fprintf(fileLog, "Redirecting stdout\n");
+						if(dup2(pfd[1], 1) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdout to pipe write end
+					}
 				}
-				fprintf(fileLog, "In child\n");
+			
+				fprintf(fileLog, "In child : %d\n", getpid());
 				fflush(fileLog);
 				
 				char ** arguments = malloc(sizeof(char *)*(argumentsForEachCommand[i][0][0]+2));
@@ -151,26 +162,29 @@ int main(int argc, char * argv[]){
 				arguments[0] = commands[i];//first argument given to the program is it's name
 				for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
 					arguments[j] = argumentsForEachCommand[i][j];
-					printf("%d\n", j);
+					fprintf(fileLog, "%d\n", j);
 				}
 				arguments[argumentsForEachCommand[i][0][0]+1] = (char *) NULL;//As required
-				printf("Last index %d\n", argumentsForEachCommand[i][0][0]+1);
+				fprintf(fileLog, "Last index %d\n", argumentsForEachCommand[i][0][0]+1);
 				fprintf(fileLog, "Arguments table built\n");
 				fflush(fileLog);
-				if(access(path, F_OK) == -1){
-					char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
+				if(access(arguments[0], F_OK) == -1){
+					char * newPath = checkPATH(arguments[0]);//Check if command exists in PATH if it doesn't in the local env
 					if(strcmp(newPath, "") != 0){
-						fprintf(fileLog, "Calling execv on %s\n", newPath);
-						fflush(fileLog);
+						fprintf(fileLog, "Calling execv on %s (in PATH)\n", newPath);
+						for(int j = 0; j<=argumentsForEachCommand[i][0][0]; j++){
+							fprintf(fileLog, "\targuments %d : %s\n", j, arguments[j]);
+							fflush(fileLog);
+						}
 						result = execv(newPath, arguments);
 					} else {
 						errno = ENOENT;//File not found
 						result = -1;
 					}
 				} else {
-					fprintf(fileLog, "Calling execv on %s\n", path);
+					fprintf(fileLog, "Calling execv on %s\n", arguments[0]);
 					fflush(fileLog);
-					result = execv(path, arguments);
+					result = execv(arguments[0], arguments);
 				}
 				fprintf(fileLog, "execv failed\n");
 				fflush(fileLog);
@@ -185,7 +199,7 @@ int main(int argc, char * argv[]){
 				fflush(fileLog);
 				fclose(fileLog);
 				exit(1);
-			} else {
+			} else if(i == numberOfCommands-1) {
 				int status;
 				printf("Waiting on child\n");
 				waitpid(pid, &status, 0);

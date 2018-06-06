@@ -1,4 +1,24 @@
-Initialize log 1528305771
-In child
+Initialize log 1528308697 PID : 9330
+Redirecting stdout
+In child : 9331
+1
+2
+Last index 3
 Arguments table built
-Calling execv on /usr/bin/sort
+Initialize log 1528308697 PID : 9330
+Redirecting stdin
+In child : 9332
+Checking PATH
+Path : /bin/grep
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : for
+	arguments 2 : shell.c
+1
+Last index 2
+Arguments table built
+Checking PATH
+Path : /usr/bin/cut
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-15
