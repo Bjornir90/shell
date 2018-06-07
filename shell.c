@@ -40,18 +40,33 @@ int main(int argc, char * argv[]){
 
 	while(!shouldQuit){
 		char ** args = calloc(sizeof(char *), 1);
-		int numberOfArgs;
+		int numberOfArgs = 0;
 		int index = 0;
+
+		int newLineRemains = 1; //boolean to see if you need to wait for new lines7
+
 		char * buffer = calloc(sizeof(char), STRSIZE);
 		getcwd(currentPath, sizeof(currentPath));
-		printf("%s>", currentPath);
-		fgets(buffer, STRSIZE, stdin);
-		if (buffer == NULL){
+		if (buffer == NULL){ //jamais null car quand fgets renconter un probleme = laisse intact la chaine et renvoie null, mais buffer inchangé
 			printf("Bye bye !\n");
 			return 0;
 		}
 
-		numberOfArgs = getAllArguments(0, buffer, args, ' ');
+
+
+			printf("%s>", currentPath);
+			while(newLineRemains){
+				newLineRemains = 0;
+				if( fgets(buffer, STRSIZE, stdin) == NULL) {
+							printf("Error while reading standard input. Exiting.\n");
+							return 1;
+						}
+				numberOfArgs += getAllArguments(0, buffer, args, ' ', &newLineRemains);
+				printf("new line remains = %d .\n", newLineRemains );
+				index = numberOfArgs;
+		}
+
+
 		int result = handleInternals(args, numberOfArgs);
 		if(result == 1){
 			continue; //A command has been found, and so we go to the next commmand
@@ -71,7 +86,8 @@ int main(int argc, char * argv[]){
 		int numberOfCommands = 1, numberOfArguments = 0;
 
 		commands[0] = args[0];
-
+ //////////////////////// ICI ON COMMENCE A TRAITER LES COMMANDES //////////////////////////
+ if(!newLineRemains){
 		for(int i = 1; i<numberOfArguments; i++){//Parse each individual command, for pipes
 			char **argumentsOfTheCommand = malloc(sizeof(char *));
 			if(args[i-1] == "|"){//If previous argument is a pipe, we have a command
@@ -138,10 +154,13 @@ int main(int argc, char * argv[]){
 			int status;
 			waitpid(pid, &status, 0);
 		}
+
+
 		free(buffer);
 		free(args);
 		free(path);
-	}
+	}// end of the if(canBeExecuted);
+}//end of the while(!shouldQuit);
 
 	return 0;
 }
