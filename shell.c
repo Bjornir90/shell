@@ -19,7 +19,6 @@ FILE *fileLog;
 char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 	char * PATHString = getenv("PATH");
 	char * pathToCheck = calloc(sizeof(char), STRSIZE);
-	fprintf(fileLog, "Checking PATH\n");
 	int index = getNextArgument(0, PATHString, pathToCheck, ':');
 	while(strcmp(pathToCheck, "") != 0 && index != -1){
 		char * pathFinal = calloc(sizeof(char), STRSIZE*2);
@@ -27,7 +26,6 @@ char * checkPATH(char * commandName){//Check if the command is valid in the PATH
 		strcat(pathFinal, "/");
 		strcat(pathFinal, commandName);
 		if(access(pathFinal, F_OK) != -1){
-			fprintf(fileLog, "Path : %s\n", pathFinal);
 			return pathFinal;
 		}
 		index = getNextArgument(++index, PATHString, pathToCheck, ':');
@@ -79,11 +77,11 @@ int main(int argc, char * argv[]){
 		argumentsOfTheCommand[0] = malloc(sizeof(char));
 		argumentsOfTheCommand[0][0] = 0;//The first cell is the length of the table [maxSize == 256]
 		//As a result of this, argumentsOfTheCommand is not really 0-indexed anymore, at leat for the arguments themselves
-
+/*
 		for(int i = 0; i<numberOfArgs; i++){
 			printf("args[%d/%d] = %s\n", i+1, numberOfArgs, args[i]);
 		}
-
+*/
 		for(int i = 1; i<numberOfArgs; i++){//Parse each individual command, for pipes
 			if(strcmp(args[i-1], "|") == 0){//If previous argument is a pipe, we have a command
 
@@ -93,7 +91,7 @@ int main(int argc, char * argv[]){
 				}
 				commands = realloc(commands, sizeof(char *)*++numberOfCommands);
 				commands[numberOfCommands-1] = args[i];
-				printf("Command %d : %s\n", numberOfCommands, args[i]);
+				//printf("Command %d : %s\n", numberOfCommands, args[i]);
 
 				argumentsForEachCommand = realloc(argumentsForEachCommand, sizeof(char **)*numberOfCommands);
 				argumentsForEachCommand[numberOfCommands-2] = argumentsOfTheCommand;
@@ -118,18 +116,18 @@ int main(int argc, char * argv[]){
 
 			} else {
 
-				printf("Pipe found\n");
+				//printf("Pipe found\n");
 
 			}
 		}
-		printf("Number of commands : %d\n", numberOfCommands);
+		/*printf("Number of commands : %d\n", numberOfCommands);
 		//NOTE : debug only
 		for (int i=0; i<numberOfCommands; i++){
 			printf("Command : %s\n", commands[i]);
 			for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
 				printf("\tArgument %d : %s\n", j, argumentsForEachCommand[i][j]);
 			}
-		}
+		}*/
 
 		//Needed to redirect std streams
 		int pfd[2];
@@ -137,20 +135,24 @@ int main(int argc, char * argv[]){
 		if(numberOfCommands > 1){
 			if(pipe(pfd) == -1) printf("%s\n", strerror(errno));
 		}
-		fileLog = fopen("shell.log", "w");
-		fprintf(fileLog, "Initialize log %d PID : %d\n", time(NULL), getpid());
 
+		fileLog = fopen("shell.log", "w");
 		for (int i=0; i<numberOfCommands; i++){
 			int pid = fork();
 			if(pid == 0){//We are in the child
+				fprintf(fileLog, "Initialize log %d PID : %d\n", time(NULL), getpid());
 				if(numberOfCommands > 1){
 					if(i>0){
 						fprintf(fileLog, "Redirecting stdin\n");
+						close(pfd[1]);
 						if(dup2(pfd[0], 0) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdin to pipe read end
+						close(pfd[0]);
 					}
 					if(i<numberOfCommands-1){
 						fprintf(fileLog, "Redirecting stdout\n");
+						close(pfd[0]);
 						if(dup2(pfd[1], 1) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdout to pipe write end
+						close(pfd[1]);
 					}
 				}
 			
@@ -162,12 +164,8 @@ int main(int argc, char * argv[]){
 				arguments[0] = commands[i];//first argument given to the program is it's name
 				for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
 					arguments[j] = argumentsForEachCommand[i][j];
-					fprintf(fileLog, "%d\n", j);
 				}
 				arguments[argumentsForEachCommand[i][0][0]+1] = (char *) NULL;//As required
-				fprintf(fileLog, "Last index %d\n", argumentsForEachCommand[i][0][0]+1);
-				fprintf(fileLog, "Arguments table built\n");
-				fflush(fileLog);
 				if(access(arguments[0], F_OK) == -1){
 					char * newPath = checkPATH(arguments[0]);//Check if command exists in PATH if it doesn't in the local env
 					if(strcmp(newPath, "") != 0){
@@ -195,61 +193,25 @@ int main(int argc, char * argv[]){
 					fflush(fileLog);
 				}
 				
-				fprintf(fileLog, "Killing current process (child)\n");
-				fflush(fileLog);
 				fclose(fileLog);
 				exit(1);
-			} else if(i == numberOfCommands-1) {
+			} else { //In the parent process
 				int status;
-				printf("Waiting on child\n");
-				waitpid(pid, &status, 0);
+				if(i == numberOfCommands-1){
+					sleep(1);
+					kill(pid, SIGKILL);
+				} else {
+					pid_t return_pid = waitpid(pid, &status, WNOHANG);
+				}
+				/*if(return_pid == 0){
+					printf("Child still running\n");
+					if(WIFEXITED(status))
+						printf("Child exited with status : %d\n", WEXITSTATUS(status));
+				} else if(return_pid > 0){
+					printf("Child dead\n");
+				}*/
 			}
 		}
-		/*int pid = fork();
-		if(pid == 0){//In the child
-			//Redirect as needed
-			/*if(shouldRedirect){
-			char * fileName = calloc(sizeof(char), STRSIZE);
-			getNextArgument(++index, buffer, fileName, ' ');
-			if(strcmp(fileName, "") == 0){//Empty string
-			fprintf(stderr, "Empty filename\n");
-			continue;
-		} else {
-		file = open(fileName, O_RDWR|O_CREAT);
-		if(file <= 0){
-		fprintf(stderr, "Could not open file\n");
-		continue;
-	}
-}
-//0 : stdin, 1 : stdout, 2 : stderr
-dup2(file, redirectCode);
-}*/
-		/*
-		numberOfArgs++;
-		args = realloc(args, sizeof(char *)*numberOfArgs);
-		args[numberOfArgs-1] = NULL;//As required in the specifications
-		int result;
-		if(access(path, F_OK) == -1){
-			char * newPath = checkPATH(path);//Check if command exists in PATH if it doesn't in the local env
-			if(strcmp(newPath, "") != 0){
-				result = execv(newPath, args);
-			} else {
-				errno = ENOENT;//File not found
-				result = -1;
-			}
-		} else {
-			result = execv(path, args);
-		}
-		if(result == -1) {
-			printf("An error has occured\n");
-			printf("%s\n", strerror(errno));
-		}
-		close(file);
-		break;//we exit the loop and kill the child
-	} else{
-		int status;
-		waitpid(pid, &status, 0);
-	}*/
 		free(buffer);
 		free(args);
 		free(path);

@@ -1,24 +1,21 @@
-Initialize log 1528308697 PID : 9330
+Initialize log 1528384257 PID : 7952
 Redirecting stdout
-In child : 9331
-1
-2
-Last index 3
-Arguments table built
-Initialize log 1528308697 PID : 9330
+In child : 7952
+Initialize log 1528384257 PID : 7953
 Redirecting stdin
-In child : 9332
-Checking PATH
-Path : /bin/grep
+Redirecting stdout
+Bad file descriptor
+In child : 7953
 Calling execv on /bin/grep (in PATH)
 	arguments 0 : grep
 	arguments 1 : for
 	arguments 2 : shell.c
-1
-Last index 2
-Arguments table built
-Checking PATH
-Path : /usr/bin/cut
+Initialize log 1528384257 PID : 7954
+Redirecting stdin
+In child : 7954
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-40
 Calling execv on /usr/bin/cut (in PATH)
 	arguments 0 : cut
 	arguments 1 : -c1-15
