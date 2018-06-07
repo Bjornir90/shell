@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <regex.h>
 #include "parser.h"
 #include "file.h"
 #define STRSIZE 1024
@@ -168,8 +169,20 @@ int handleInternals(const char **args, int numberOfArgs){
 		struct dirent ** list = malloc(sizeof(struct dirent *));
 		int numberOfFiles = getAllFiles(source, &list);
 		int i;
+		int regexReturn;
+		regex_t regex;
+		if(searchName){
+			regexReturn = regcomp(&regex, name, 0);
+			if(regexReturn)
+				fprintf(stderr, "Could not compile regex : %s\n", name);
+		}
 		for (i=0; i<numberOfFiles; i++){
 			struct dirent * file = list[i];
+			if(searchName){
+				if(regexec(&regex, file->d_name, 0, NULL, 0) == REG_NOMATCH){
+					continue;//skip this file
+				}
+			}
 			printf("%s\n", file->d_name);
 		}
 

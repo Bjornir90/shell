@@ -138,6 +138,14 @@ int main(int argc, char * argv[]){
 
 		fileLog = fopen("shell.log", "w");
 		for (int i=0; i<numberOfCommands; i++){
+			int result = handleInternals(args, numberOfArgs);
+			if(result == 1){
+				continue; //A command has been found, and so we go to the next commmand
+			} else if (result == 0){
+				printf("Goodbye !\n");
+				//TODO free things
+				return 0;
+			}
 			int pid = fork();
 			if(pid == 0){//We are in the child
 				fprintf(fileLog, "Initialize log %d PID : %d\n", time(NULL), getpid());
