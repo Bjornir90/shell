@@ -1,0 +1,16 @@
+i : 0
+Redirecting stdout
+In child : 6357
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : if
+	arguments 2 : shell.c
+ and turning fpfd into bpfd
+i : 1
+Closing backward pipe file descriptor WRITE_END
+ and turning fpfd into bpfd
+Redirecting stdin
+In child : 6358
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-15

@@ -14,6 +14,7 @@
 #include "internal.h"
 #define STRSIZE 1024
 
+const int READ_END = 0, WRITE_END = 1;
 FILE *fileLog;
 
 char * checkPATH(char * commandName){//Check if the command is valid in the PATH
@@ -39,7 +40,9 @@ int main(int argc, char * argv[]){
 	char currentPath[STRSIZE*4];
 	int redirectCode;
 	int shouldQuit = 0;
+	system("clear");
 	printf("You can type \"help\" to receive help\n");
+	fileLog = fopen("shell.log", "w");
 
 	while(!shouldQuit){
 		char ** args = calloc(sizeof(char *), 1);
@@ -120,25 +123,38 @@ int main(int argc, char * argv[]){
 
 			}
 		}
-		/*printf("Number of commands : %d\n", numberOfCommands);
+		/*fprintf(fileLog, "Number of commands : %d\n", numberOfCommands);
 		//NOTE : debug only
 		for (int i=0; i<numberOfCommands; i++){
-			printf("Command : %s\n", commands[i]);
+			fprintf(fileLog, "Command : %s\n", commands[i]);
 			for(int j=1; j<=argumentsForEachCommand[i][0][0]; j++){
-				printf("\tArgument %d : %s\n", j, argumentsForEachCommand[i][j]);
+				fprintf(fileLog, "\tArgument %d : %s\n", j, argumentsForEachCommand[i][j]);
 			}
 		}*/
 
 		//Needed to redirect std streams
-		int pfd[2];
+		int fpfd[2], bpfd[2];
 		int result;
 		if(numberOfCommands > 1){
-			if(pipe(pfd) == -1) printf("%s\n", strerror(errno));
+			if(pipe(fpfd) == -1) fprintf(fileLog, "Pipe error : %s code : %d\n", strerror(errno), errno);
 		}
 
-		fileLog = fopen("shell.log", "w");
-		for (int i=0; i<numberOfCommands; i++){
+		for (int i=0; i<numberOfCommands; i++){//To add a last process if there are more than 1 command
 			int result = handleInternals(args, numberOfArgs);
+			if(i>0){//not for first command as it has no bpfd
+				if(i>1){
+					fprintf(fileLog, "Closing bpfd[READ_END]");
+					close(bpfd[READ_END]);
+				}
+				fprintf(fileLog, " and turning fpfd into bpfd");
+				bpfd[READ_END] = fpfd[READ_END];
+				bpfd[WRITE_END] = fpfd[WRITE_END];
+				if(i<numberOfCommands-1){//Not for last command
+					fprintf(fileLog, " and piping fpfd");
+					if(pipe(fpfd) == -1) fprintf(fileLog, "Pipe error : %s code : %d\n", strerror(errno), errno);
+				}
+				fprintf(fileLog, "\n");
+			}
 			if(result == 1){
 				continue; //A command has been found, and so we go to the next commmand
 			} else if (result == 0){
@@ -148,19 +164,28 @@ int main(int argc, char * argv[]){
 			}
 			int pid = fork();
 			if(pid == 0){//We are in the child
-				fprintf(fileLog, "Initialize log %d PID : %d\n", time(NULL), getpid());
 				if(numberOfCommands > 1){
-					if(i>0){
-						fprintf(fileLog, "Redirecting stdin\n");
-						close(pfd[1]);
-						if(dup2(pfd[0], 0) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdin to pipe read end
-						close(pfd[0]);
-					}
-					if(i<numberOfCommands-1){
-						fprintf(fileLog, "Redirecting stdout\n");
-						close(pfd[0]);
-						if(dup2(pfd[1], 1) == -1) fprintf(fileLog, "%s\n", strerror(errno));//stdout to pipe write end
-						close(pfd[1]);
+					if(i>0 && i<numberOfCommands-1){//Command in the middle of others
+						fprintf(fileLog, "Redirecting both stdin and stdout\n");
+						close(bpfd[WRITE_END]);
+						close(fpfd[READ_END]);
+						if(dup2(bpfd[READ_END], 0) == -1) fprintf(fileLog, "dup2 error on bpfd read end : %s code : %d\n", strerror(errno), errno);//stdin to bakcward pipe read end
+						if(dup2(fpfd[WRITE_END], 1) == -1) fprintf(fileLog, "dup2 error on fpfd write end : %s code : %d\n", strerror(errno), errno);//stdout to forward pipe write end
+						close(bpfd[READ_END]);
+						close(fpfd[WRITE_END]);
+					} else {
+						if(i>0){//Last command
+							fprintf(fileLog, "Redirecting stdin\n");
+							close(bpfd[WRITE_END]);
+							if(dup2(bpfd[READ_END], 0) == -1) fprintf(fileLog, "dup2 error on bpfd read end : %s code : %d\n", strerror(errno), errno);//stdin to pipe read end
+							close(bpfd[READ_END]);
+						}
+						if(i<numberOfCommands-1){//First command
+							fprintf(fileLog, "Redirecting stdout\n");
+							close(fpfd[READ_END]);
+							if(dup2(fpfd[WRITE_END], 1) == -1) fprintf(fileLog, "dup2 error on fpfd write end : %s code : %d\n", strerror(errno), errno);//stdout to pipe write end
+							close(fpfd[WRITE_END]);
+						}
 					}
 				}
 			
@@ -200,24 +225,18 @@ int main(int argc, char * argv[]){
 					fprintf(fileLog, "%s\n", strerror(errno));
 					fflush(fileLog);
 				}
-				
+
 				fclose(fileLog);
 				exit(1);
 			} else { //In the parent process
 				int status;
-				if(i == numberOfCommands-1){
-					sleep(1);
-					kill(pid, SIGKILL);
-				} else {
-					pid_t return_pid = waitpid(pid, &status, WNOHANG);
+				fprintf(fileLog, "i : %d\n", i);
+				if(i>0){
+					fprintf(fileLog, "Closing backward pipe file descriptor WRITE_END\n");
+					close(bpfd[WRITE_END]);
 				}
-				/*if(return_pid == 0){
-					printf("Child still running\n");
-					if(WIFEXITED(status))
-						printf("Child exited with status : %d\n", WEXITSTATUS(status));
-				} else if(return_pid > 0){
-					printf("Child dead\n");
-				}*/
+				fflush(fileLog);
+				pid_t return_pid = waitpid(pid, &status, 0);
 			}
 		}
 		free(buffer);
