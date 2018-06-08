@@ -122,9 +122,8 @@ int handleInternals(const char **args, int numberOfArgs){
 			}
 		}
 		if(strcmp(source, "") == 0 || strcmp(source, ".") == 0){
-			printf("CWD : %s\n", getcwd(source, sizeof(source)));
+			getcwd(source, sizeof(source));
 		}
-		printf("ls : source : %s\n", source);
 		struct stat source_stat;
 		stat(source, &source_stat);
 		int isDir = S_ISDIR(source_stat.st_mode);
