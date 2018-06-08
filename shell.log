@@ -1,0 +1,5 @@
+i : 0
+In child : 9590
+Calling execv on /bin/echo (in PATH)
+	arguments 0 : echo
+	arguments 1 : coucou

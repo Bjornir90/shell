@@ -1,1 +1,1 @@
-int handleInternals(char ** args, int numberOfArgs);
+int handleInternals(const char ** args, int numberOfArgs);
