@@ -36,17 +36,15 @@ char* checkPATH(char* commandName)
     return "";
 }
 
-int main(int argc, char* argv[])
-{
-    // char *currentPath = calloc(STRSIZE*4, sizeof(char));
-    char currentPath[STRSIZE * 4];
-    int redirectCode;
-    int shouldQuit = 0;
-    system("clear");
-    printf("You can type \"help\" to receive help\n");
-    fileLog = fopen("shell.log", "w");
+int main(int argc, char* argv[]){
+	char currentPath[STRSIZE * 4];
+	int redirectCode;
+	int shouldQuit = 0;
+	system("clear");
+	printf("You can type \"help\" to receive help\n");
+	fileLog = fopen("shell.log", "w");
 
-    while(!shouldQuit) {
+	while(!shouldQuit) {
 		char** args = calloc(sizeof(char*), 1);
 		int numberOfArgs = 0;
 		int newLineRemains = 1;
@@ -250,7 +248,7 @@ int main(int argc, char* argv[])
 				free(args);
 			}
 		}
-    }
+	}
 
     return 0;
 }
