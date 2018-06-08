@@ -1,5 +1,16 @@
 i : 0
-In child : 9590
+In child : 10351
 Calling execv on /bin/echo (in PATH)
 	arguments 0 : echo
-	arguments 1 : coucou
+	arguments 1 : 'Hello,
+	arguments 2 : world.'
+	arguments 3 : >foo.txt
+i : 0
+In child : 10367
+Calling execv on /bin/echo (in PATH)
+	arguments 0 : echo
+	arguments 1 : testeux
+	arguments 2 : >
+	arguments 3 : test.txt
+i : 0
+In child : 10534
