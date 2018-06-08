@@ -1,16 +1,47 @@
 i : 0
 Redirecting stdout
-In child : 6357
+In child : 6439
 Calling execv on /bin/grep (in PATH)
 	arguments 0 : grep
 	arguments 1 : if
-	arguments 2 : shell.c
+	arguments 2 : file.c
  and turning fpfd into bpfd
 i : 1
 Closing backward pipe file descriptor WRITE_END
  and turning fpfd into bpfd
 Redirecting stdin
-In child : 6358
+In child : 6440
 Calling execv on /usr/bin/cut (in PATH)
 	arguments 0 : cut
 	arguments 1 : -c1-15
+i : 0
+In child : 6452
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : if
+	arguments 2 : shell.c
+i : 0
+Redirecting stdout
+In child : 6455
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : if
+	arguments 2 : shell.c
+ and turning fpfd into bpfd and piping fpfd
+i : 1
+Closing backward pipe file descriptor WRITE_END
+ and turning fpfd into bpfd and piping fpfd
+Redirecting both stdin and stdout
+In child : 6456
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : path
+Closing bpfd[READ_END] and turning fpfd into bpfd
+i : 2
+Closing backward pipe file descriptor WRITE_END
+Closing bpfd[READ_END] and turning fpfd into bpfd
+Redirecting stdin
+In child : 6457
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-20
