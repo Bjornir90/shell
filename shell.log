@@ -1,11 +1,43 @@
 i : 0
-In child : 8685
-Calling execv on /bin/rm (in PATH)
-	arguments 0 : rm
-	arguments 1 : shell_back
+Redirecting stdout
+In child : 11153
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : for
+	arguments 2 : shell.c
+ and turning fpfd into bpfd
+i : 1
+Closing backward pipe file descriptor WRITE_END
+ and turning fpfd into bpfd
+Redirecting stdin
+In child : 11154
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-15
 i : 0
-In child : 8686
-Calling execv on /bin/rm (in PATH)
-	arguments 0 : rm
-	arguments 1 : -rf
-	arguments 2 : shell_back
+In child : 11162
+i : 0
+In child : 11166
+i : 0
+In child : 11169
+i : 0
+In child : 11173
+Calling execv on /bin/sleep (in PATH)
+	arguments 0 : sleep
+	arguments 1 : 10
+i : 0
+Redirecting stdout
+In child : 11175
+Calling execv on /bin/grep (in PATH)
+	arguments 0 : grep
+	arguments 1 : if
+	arguments 2 : shell.c
+ and turning fpfd into bpfd
+i : 1
+Closing backward pipe file descriptor WRITE_END
+ and turning fpfd into bpfd
+Redirecting stdin
+In child : 11176
+Calling execv on /usr/bin/cut (in PATH)
+	arguments 0 : cut
+	arguments 1 : -c1-15

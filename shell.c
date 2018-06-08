@@ -70,7 +70,6 @@ int main(int argc, char * argv[]){
 			return 0;
 		}*/
 
-		char *path = args[0];
 		char ***argumentsForEachCommand = malloc(sizeof(char **));
 		char **commands = malloc(sizeof(char *));
 		char **argumentsOfTheCommand = malloc(sizeof(char *));
@@ -107,7 +106,7 @@ int main(int argc, char * argv[]){
 
 				numberOfArguments++;
 				argumentsOfTheCommand[0][0] = numberOfArguments;//Add 1 to the number of cells
-				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments+1);
+				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*(numberOfArguments+1));
 				argumentsOfTheCommand[numberOfArguments] = args[i];
 
 				if (i == numberOfArgs-1)//We reached the last arg in args
@@ -237,7 +236,6 @@ int main(int argc, char * argv[]){
 		}
 		free(buffer);
 		free(args);
-		free(path);
 	}
 
 	return 0;
