@@ -188,6 +188,14 @@ int handleInternals(const char **args, int numberOfArgs){
 
 
 		return 1;
+	} else if (strcmp(path, "cp") == 0){
+		if(strcmp(args[1], "-r") == 0){
+			copyFolder(args[2], args[3]);
+		} else {
+			copyFile(args[1], args[2]);
+		}
+		
+		return 1;
 	}
 	return -1;
 }
