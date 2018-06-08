@@ -75,7 +75,6 @@ int main(int argc, char * argv[]){
 			return 0;
 		}*/
 
-		char *path = args[0];
 		char ***argumentsForEachCommand = malloc(sizeof(char **));
 		char **commands = malloc(sizeof(char *));
 		char **argumentsOfTheCommand = malloc(sizeof(char *));
@@ -84,12 +83,8 @@ int main(int argc, char * argv[]){
 		commands[0] = args[0];
 		argumentsOfTheCommand[0] = malloc(sizeof(char));
 		argumentsOfTheCommand[0][0] = 0;//The first cell is the length of the table [maxSize == 256]
-		//As a result of this, argumentsOfTheCommand is not really 0-indexed anymore, at leat for the arguments themselves
-/*
-		for(int i = 0; i<numberOfArgs; i++){
-			printf("args[%d/%d] = %s\n", i+1, numberOfArgs, args[i]);
-		}
-*/
+		//As a result of this, argumentsOfTheCommand is not really 0-indexed anymore, at least for the arguments themselves
+
 		for(int i = 1; i<numberOfArgs; i++){//Parse each individual command, for pipes
 			if(strcmp(args[i-1], "|") == 0){//If previous argument is a pipe, we have a command
 
@@ -116,7 +111,7 @@ int main(int argc, char * argv[]){
 
 				numberOfArguments++;
 				argumentsOfTheCommand[0][0] = numberOfArguments;//Add 1 to the number of cells
-				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*numberOfArguments+1);
+				argumentsOfTheCommand = realloc(argumentsOfTheCommand, sizeof(char *)*(numberOfArguments+1));
 				argumentsOfTheCommand[numberOfArguments] = args[i];
 
 				if (i == numberOfArgs-1)//We reached the last arg in args
@@ -161,7 +156,7 @@ int main(int argc, char * argv[]){
 				fprintf(fileLog, "\n");
 			}
 			if(result == 1){
-				continue; //A command has been found, and so we go to the next commmand
+				continue; //A internal command has been found, and so we go to the next commmand
 			} else if (result == 0){
 				printf("Goodbye !\n");
 				//TODO free things
@@ -246,7 +241,6 @@ int main(int argc, char * argv[]){
 		}
 		free(buffer);
 		free(args);
-		free(path);
 	}
 
 	return 0;

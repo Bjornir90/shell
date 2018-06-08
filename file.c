@@ -14,6 +14,9 @@ int copyFile(char* source, char* dest)
 	int sizeBuf = 2048;
 	int fOrigin = open(source, O_RDONLY);
 	int fDest = open(dest, O_WRONLY|O_CREAT);
+	if(fDest == -1){
+		printf("Erreur lors de l'ouverture de %s : %s\n", dest, strerror(errno));
+	}
 	struct stat st;
 	ssize_t res;
 	char * buf = malloc(sizeBuf*sizeof(char));
@@ -25,9 +28,8 @@ int copyFile(char* source, char* dest)
 		res = read(fOrigin, buf, sizeBuf);
 		if(res>0){
 			nbrWrite = write(fDest, buf, res);
-			printf("Bloc lu %d et copie %d\n", res, nbrWrite);
 			if(nbrWrite == -1){
-				printf("Error : %s", strerror(errno));
+				printf("Error : %s\n", strerror(errno));
 			}
 		}
 	} while(res > 0);
@@ -49,7 +51,9 @@ int copyFolder(char* source, char* dest)
 	char * pathDest = calloc(5000, sizeof(char));
 	pathOrigin = strcpy(pathOrigin, source);
 	pathDest = strcpy(pathDest, dest);
+	mkdir(pathDest, 0777);//Create root of copy
 	while ((dir = readdir(dirOrigin)) != NULL) {
+		if(dir->d_name[0] == '.') continue;//Ignore folders starting with a dot
 		pathOrigin = strcpy(pathOrigin, source);
 		pathOrigin = strcat(pathOrigin, "/");
 		pathOrigin = strcat(pathOrigin, dir->d_name);
@@ -63,10 +67,9 @@ int copyFolder(char* source, char* dest)
 			mkdir(pathDest, 0777);
 			return copyFolder(pathOrigin, pathDest);
 		}else if( strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){//If it's a file and not the .. or ., we copy
-		printf("Origine : %s Destination : %s\n", pathOrigin, pathDest);
-		copyFile(pathOrigin, pathDest);
+			copyFile(pathOrigin, pathDest);
+		}
 	}
-}
 return 0;
 }
 
