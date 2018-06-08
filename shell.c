@@ -52,8 +52,12 @@ int main(int argc, char * argv[]){
 		getcwd(currentPath, sizeof(currentPath));
 		printf("%s>", currentPath);
 		fgets(buffer, STRSIZE, stdin);
-		if (buffer == NULL){
+		if (*buffer == NULL){
+			system("clear");
 			printf("Bye bye !\n");
+			if(args != NULL){
+				free(args);
+			}
 			return 0;
 		}
 		numberOfArgs = getAllArguments(0, buffer, &args, ' ');
@@ -153,8 +157,17 @@ int main(int argc, char * argv[]){
 			if(result == 1){
 				continue; //A internal command has been found, and so we go to the next commmand
 			} else if (result == 0){
+				system("clear");
 				printf("Goodbye !\n");
-				//TODO free things
+				if(buffer != NULL)
+					free(buffer);
+				if(args != NULL){
+					for(int i = 0; i<numberOfArgs; i++){
+						if(args[i] != NULL)
+							free(args[i]);
+					}
+					free(args);
+				}
 				return 0;
 			}
 			int pid = fork();
@@ -234,8 +247,15 @@ int main(int argc, char * argv[]){
 				pid_t return_pid = waitpid(pid, &status, 0);
 			}
 		}
-		free(buffer);
-		free(args);
+		if(buffer != NULL)
+			free(buffer);
+		if(args != NULL){
+			for(int i = 0; i<numberOfArgs; i++){
+				if(args[i] != NULL)
+					free(args[i]);
+			}
+			free(args);
+		}
 	}
 
 	return 0;
