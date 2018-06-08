@@ -59,9 +59,9 @@ int getNextArgument(int index, char * input, char * argument, char separator){
   return index;
 }
 
-int getAllArguments(int index, char * input, char ** result, char separator, int* newLineRemains){
+int getAllArguments(int index, char * input, char ** result, int indexresult, char separator, int* newLineRemains){
 	char lastChar = input[index];
-	int numberOfArgs = 0;
+	int numberOfArgs = indexresult;
 	while(lastChar != '\n' && lastChar != '\0' && lastChar != '\\'){//Loop to the end of the string or to the end of a line
 		char * argument = malloc(sizeof(char)*STRSIZE);//Allocate new argument, that we will put in result when we it is built
 		index = getNextArgument(index, input, argument, separator);
@@ -75,8 +75,15 @@ int getAllArguments(int index, char * input, char ** result, char separator, int
     else if(lastChar == '\n' || lastChar == '\0'){
       *newLineRemains = 0;
     }
-		result = realloc(result, sizeof(char *)*++numberOfArgs);//Dynamically allocate memory to accept any number of arguments
-		result[numberOfArgs-1] = argument;
+    numberOfArgs ++;
+		char** temp = realloc(result, numberOfArgs * sizeof(char *));//Dynamically allocate memory to accept any number of arguments
+    if(temp){
+      result = temp;
+    }
+    else{
+      printf("Error while reallocating memory.\n");
+    }
+    result[numberOfArgs-1] = argument;
 	}
 	return numberOfArgs;
 }

@@ -18,8 +18,10 @@ int handleInternals(char **args, int numberOfArgs){
 	const char helpCommand[] = "help";
 	char currentPath[STRSIZE*4];
 	char path[STRSIZE*4];//First argument is command name
+	if (args[0] == NULL){ // to prevent segfault form strcpy if no arguments
+		return 1;
+	}
 	strcpy(path, args[0]);
-
 	getcwd(currentPath, sizeof(currentPath));
 
 	if(strcmp(exitCommand, path) == 0){//if the user request to quit

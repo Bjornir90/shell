@@ -52,8 +52,6 @@ int main(int argc, char * argv[]){
 			return 0;
 		}
 
-
-
 			printf("%s>", currentPath);
 			while(newLineRemains){
 				newLineRemains = 0;
@@ -61,7 +59,11 @@ int main(int argc, char * argv[]){
 							printf("Error while reading standard input. Exiting.\n");
 							return 1;
 						}
-				numberOfArgs += getAllArguments(0, buffer, args, ' ', &newLineRemains);
+				numberOfArgs = getAllArguments(0, buffer, args, numberOfArgs, ' ', &newLineRemains);
+				printf(" number of args : %d\n", numberOfArgs );
+				for(int i = 0; i< numberOfArgs; i++){
+					printf("dans args : %s\n", args[i] );
+				}
 				printf("new line remains = %d .\n", newLineRemains );
 				index = numberOfArgs;
 		}
