@@ -7,21 +7,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <regex.h>
 #include "parser.h"
 #include "file.h"
 #define STRSIZE 1024
 
 //NOTE: a return value of 1 does not indicate success, but only that an internal function has been found
 
-int handleInternals(char **args, int numberOfArgs){
+int handleInternals(const char **args, int numberOfArgs){
 	const char exitCommand[] = "exit";
 	const char helpCommand[] = "help";
 	char currentPath[STRSIZE*4];
 	char path[STRSIZE*4];//First argument is command name
-	if (args[0] == NULL){ // to prevent segfault form strcpy if no arguments
-		return 1;
+	if (args[0] == NULL){ // to prevent segfault form strcpy if no arguments is entered
+	return 1;
 	}
 	strcpy(path, args[0]);
+
 	getcwd(currentPath, sizeof(currentPath));
 
 	if(strcmp(exitCommand, path) == 0){//if the user request to quit
@@ -104,6 +106,9 @@ int handleInternals(char **args, int numberOfArgs){
 		int i;
 		int listAllFiles = 0;
 		int detailsRequired = 0;
+
+		strcpy(source, "");
+
 		for (i = 1; i < numberOfArgs; i++){
 			strcpy(argument, args[i]);
 			if (argument[0] != '-'){//We found the path
@@ -117,8 +122,9 @@ int handleInternals(char **args, int numberOfArgs){
 			}
 		}
 		if(strcmp(source, "") == 0 || strcmp(source, ".") == 0){
-			getcwd(source, sizeof(source));
+			printf("CWD : %s\n", getcwd(source, sizeof(source)));
 		}
+		printf("ls : source : %s\n", source);
 		struct stat source_stat;
 		stat(source, &source_stat);
 		int isDir = S_ISDIR(source_stat.st_mode);
@@ -166,8 +172,20 @@ int handleInternals(char **args, int numberOfArgs){
 		struct dirent ** list = malloc(sizeof(struct dirent *));
 		int numberOfFiles = getAllFiles(source, &list);
 		int i;
+		int regexReturn;
+		regex_t regex;
+		if(searchName){
+			regexReturn = regcomp(&regex, name, 0);
+			if(regexReturn)
+				fprintf(stderr, "Could not compile regex : %s\n", name);
+		}
 		for (i=0; i<numberOfFiles; i++){
 			struct dirent * file = list[i];
+			if(searchName){
+				if(regexec(&regex, file->d_name, 0, NULL, 0) == REG_NOMATCH){
+					continue;//skip this file
+				}
+			}
 			printf("%s\n", file->d_name);
 		}
 

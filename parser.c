@@ -59,7 +59,7 @@ int getNextArgument(int index, char * input, char * argument, char separator){
   return index;
 }
 
-int getAllArguments(int index, char * input, char ** result, int indexresult, char separator, int* newLineRemains){
+int getAllArguments(int index, char * input, char *** result, int indexresult, char separator, int* newLineRemains){
 	char lastChar = input[index];
 	int numberOfArgs = indexresult;
 	while(lastChar != '\n' && lastChar != '\0' && lastChar != '\\'){//Loop to the end of the string or to the end of a line
@@ -67,23 +67,15 @@ int getAllArguments(int index, char * input, char ** result, int indexresult, ch
 		index = getNextArgument(index, input, argument, separator);
 		if(index == -1) return numberOfArgs;
 		lastChar = input[++index];
-    printf("dernier caractère = %c .\n",lastChar );
     if(lastChar == '\\'){
-      printf("\\ détecté \n");
       *newLineRemains = 1;
     }
     else if(lastChar == '\n' || lastChar == '\0'){
       *newLineRemains = 0;
     }
     numberOfArgs ++;
-		char** temp = realloc(result, numberOfArgs * sizeof(char *));//Dynamically allocate memory to accept any number of arguments
-    if(temp){
-      result = temp;
-    }
-    else{
-      printf("Error while reallocating memory.\n");
-    }
-    result[numberOfArgs-1] = argument;
+		*result = realloc(*result, numberOfArgs * sizeof(char *));//Dynamically allocate memory to accept any number of arguments
+    (*result)[numberOfArgs-1] = argument;
 	}
 	return numberOfArgs;
 }
